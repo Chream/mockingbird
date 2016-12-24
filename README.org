@@ -1,0 +1,13 @@
+* Cl-Stub 
+
+** Usage
+
+** Installation
+
+** Author
+
++ Christopher Eames (Chream) (chream@gmx.com)
+
+** Copyright
+
+Copyright (c) 2016 Christopher Eames (Chream) (chream@gmx.com)
