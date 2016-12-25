@@ -13,11 +13,14 @@
   (:documentation
    "")
 
-  (:export :stub-fn :with-stubs :with-mocks :with-shadow))
+  (:export :stub-fn :with-stubs :with-mocks :with-shadow
+           :*mock-calls*))
 
 (in-package :cl-stub/src/cl-stub)
 
-(defun stub-fn (the-function return-value)
+(defvar *mock-calls* nil)
+
+(defun stub-fn (the-function return-value) 
   "Returns a stub `function' interned into a temprary name.
    The function also closes over the dynammic *mock-calls* variable
    which keeps track of calls and arguments in a alist. function name

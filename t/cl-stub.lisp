@@ -21,6 +21,9 @@
 ;;; Parameters/Constants/Functions ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(setf prove:*enable-colors* t)
+(setf *default-reporter* :list)
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun foo (x) x)
   (defun bar (x y) (+ x y))
@@ -41,7 +44,7 @@
   (is (baz 15) 30 "is default.")
   (is (bazz 30) 90 "is default."))
 
-(defun with-stubs-test ()
+(defun with-stubs-test ()2
   (diag "Testing in with-stubs-test.")
   (subtest "Basic stub tests."
     (with-stubs
@@ -50,9 +53,19 @@
       (is (foo 5) 99 "is stubbed.")
       (is (bar 5 10) 99 "is stubbed.")
       (is (baz 15) 99 "is stubbed.")
-      (is (bazz 30) 99 "is stubbed.")))
-  (finalize))
+      (is (bazz 30) 99 "is stubbed."))))
 
-(plan nil)
+(defun with-mocks-test ()
+  (diag "Testing in with-mocks-test.")
+  (subtest "Basic mocks tests."
+    (with-mocks (foo bar)
+      (is (foo 5) nil "is nil.")
+      (is (bar 10 15) nil "is nil."))))
+
+(plan 5)
+
+(init-test)
+(with-stubs-test)
+
 
 (finalize)
