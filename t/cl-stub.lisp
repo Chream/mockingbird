@@ -24,14 +24,15 @@
 (setf prove:*enable-colors* t)
 (setf *default-reporter* :list)
 
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defun foo (x) x)
-  (defun bar (x y) (+ x y))
+  (defun foor (x) x)
+  (defun barr (x y) (+ x y))
 
   (defun baz (x)
-    (+ (foo x) x))
+    (+ (foor x) x))
   (defun bazz (x)
-    (+ (foo x) (baz x))))
+    (+ (foor x) (baz x))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Test functions. ;;;
@@ -39,33 +40,62 @@
 
 (defun init-test ()
   (diag "Testing in with-stubs-test.")
-  (is (foo 5) 5 "is default.")
-  (is (bar 5 10) 15 "is default.")
-  (is (baz 15) 30 "is default.")
-  (is (bazz 30) 90 "is default."))
+  (subtest "Init tests."
+    (is (foor 5) 5 "returns correctly.")
+    (is (barr 5 10) 15 "returns correctly.")
+    (is (baz 15) 30 "returns correctly.")
+    (is (bazz 30) 90 "returns correctly.")))
 
-(defun with-stubs-test ()2
+(defun *mock-calls*-init-test ()
+  (diag "Testing *mock-calls* variable.")
+  (with-stubs ((foor 10))
+    (is *mock-calls* '() "init is nil.")
+    (flet ((f ()
+             (setf *mock-calls* (acons 'test 5 *mock-calls*))))
+      (let ((expected (acons 'test 5 '())))
+        (f)
+        (is *mock-calls* expected "is special.")
+        (is (funcall  (lambda () *mock-calls*))
+            expected "inner function readable.")))))
+
+(defun with-stubs-test ()
   (diag "Testing in with-stubs-test.")
-  (subtest "Basic stub tests."
+  (subtest "Basic stub tests for (with-stubs)."
     (with-stubs
-        ((foo 99) (bar 99) (baz 99)
+        ((foor 99) (barr 99) (baz 99)
          (bazz 99))
-      (is (foo 5) 99 "is stubbed.")
-      (is (bar 5 10) 99 "is stubbed.")
-      (is (baz 15) 99 "is stubbed.")
-      (is (bazz 30) 99 "is stubbed."))))
+      (is (foor 5) 99 "is lexically stubbed.")
+      (is *mock-calls* (acons "FOOR" (list '(5)) '())
+          "*mocks-calls* is special.")
+      (is (barr 5 10) 99 "is lexically stubbed.")
+      (is (baz 15) 99 "is lexically stubbed.")
+      (is (baz 20) 99 "is lexically stubbed.")
+      (is (bazz 30) 99 "is lexically  stubbed.")
+      (subtest "Get call times with (call-times-for)."
+        (is (call-times-for 'foor) 1 "1 call time for foor.")
+        (is (call-times-for 'barr) 1 "1 call time for barr")
+        (is (call-times-for 'baz) 2 "2 call times for baz")
+        (is (call-times-for 'bazz) 1 "1 call time for bazz"))
+      (subtest "Verify call times with (verify-call-times-for)."
+        (ok (verify-call-times-for 'foor 1) "runnable.")
+        (ok (verify-call-times-for 'foor 1) "1 call.")
+        (ok (verify-call-times-for 'barr 1) "1 call.")
+        (ok (verify-call-times-for 'baz 2) "2 call.")
+        (ok (verify-call-times-for 'bazz 1) "1 call.")))))
 
 (defun with-mocks-test ()
   (diag "Testing in with-mocks-test.")
   (subtest "Basic mocks tests."
-    (with-mocks (foo bar)
-      (is (foo 5) nil "is nil.")
-      (is (bar 10 15) nil "is nil."))))
+    (with-mocks (foor barr)
+      (is (foor 5) nil "is nil.")
+      (is (barr 10 15) nil "is nil."))))
 
-(plan 5)
+(plan 6)
 
 (init-test)
+(*mock-calls*-init-test)
 (with-stubs-test)
+(with-mocks-test)
 
 
 (finalize)
