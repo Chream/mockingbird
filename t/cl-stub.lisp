@@ -48,7 +48,7 @@
 
 (defun *mock-calls*-init-test ()
   (diag "Testing *mock-calls* variable.")
-  (with-stubs ((foor 10))
+  (with-stubs ()
     (is *mock-calls* '() "init is nil.")
     (flet ((f ()
              (setf *mock-calls* (acons 'test 5 *mock-calls*))))
@@ -57,7 +57,6 @@
         (is *mock-calls* expected "is special.")
         (is (funcall  (lambda () *mock-calls*))
             expected "inner function readable.")))))
-
 (defun with-stubs-test ()
   (diag "Testing in with-stubs-test.")
   (subtest "Basic stub tests for (with-stubs)."
