@@ -36,14 +36,8 @@
 (defun fn-names-from (fdefs)
   (mapcar #'first fdefs))
 
-(defun args-from (fns)
-  (mapcar #'arglist fns))
-
 (defun returns-from (fdefs)
   (mapcar #'second fdefs))
-
-(defun make-stub-fns-from (fn-names stub-returns)
-  (mapcar #'stub-fn fn-names stub-returns))
 
 (defun register-mock-call-for (fn args)
   (rplacd (mock-calls-spec-for fn)
@@ -55,9 +49,6 @@
 
 (defun mock-fn-registered-p (fn)
   (mock-calls-spec-for fn))
-
-(defun make-stub-fn-name-for (fn)
-  (conc-symbol fn '-stub (gensym)))
 
 (defun mock-calls-spec-for (fn-name)
     "Accessor function for the special *mock-calls* variable.
@@ -79,43 +70,17 @@
 
 (defvar *mock-calls* '())
 
-(defun stub-fn (orig-fn stub-fn return-value)
-  "Returns a stub `named-function' interned into a temprary name.
-   The function also closes over the dynammic *mock-calls* variable
-   which keeps track of calls and arguments in a alist. function name
-   is the key."
-  `(defun ,(intern (string stub-fn) 'mock) (&rest args)
-      (unless (mock-fn-registered-p ,orig-fn)
-         (register-mock-fn ,orig-fn))
-       (register-mock-call-for ,orig-fn args)
-       ,return-value))
-
-(defun stub-fn-names-from (fdefs)
-  (mapcar (lambda (fn-name) (intern (string (conc-symbol fn-name '-stub))
-                                    'mock))
-          (fn-names-from fdefs)))
-
-(defun stub-fn-spec (fn-defs)
-  (let ((fn-names (fn-names-from fn-defs))
-        (stub-returns (returns-from fn-defs))
-        (stub-fn-names (stub-fn-names-from fn-defs)))
-    `(progn
-       ,@(mapcar #'stub-fn fn-names stub-fn-names stub-returns)))))
-
 (defun flet-spec (fn-defs)
   (let* ((fn-names (fn-names-from fn-defs))
-         (fn-argss (mapcar #'arglist fn-names))
-         (stub-fn-names (stub-fn-names-from fn-defs)))
-    `(progn
-       ,@(mapcar (lambda (name stub-name args)
-                   `(',name ,args (funcall #',stub-name ,@args)))
-                 fn-names stub-fn-names fn-argss))))
-
-(defun flet-spec (fn-defs)
-  (let* ((fn-names (fn-names-from fn-defs))
-         (fn-argss (mapcar #'arglist fn-names))
-         (stub-fn-names (stub-fn-names-from fn-defs)))
-    `(',fn-names ,fn-argss ,stub-fn-names)))
+         (stub-returns (returns-from fn-defs))
+         (args (gensym)))
+    (mapcar (lambda (name stub-return)
+                 `(,name (&rest ,args)
+                        (unless (mock-fn-registered-p ',name)
+                            (register-mock-fn ',name))
+                          (register-mock-call-for ',name ,args)
+                          ,stub-return))
+            fn-names stub-returns)))
 
 (defmacro with-stubs ((&rest fdefs) &body body)
  "The stub macro. Lexically binds a new stub function in place
@@ -125,9 +90,8 @@
                                  *mock-calls*
                                  '())))
     (declare (special *mock-calls*))
-    ,(stub-fn-spec fdefs)
     (flet  ,(flet-spec fdefs)
-      ,@body)))
+        ,@body)))
 
 (defmacro with-mocks ((&rest fn-names) &body body)
   "The mock macro. Lexically binds a new mock function which
