@@ -20,7 +20,8 @@
   (:export :stub-fn :with-stubs :with-mocks :with-shadow
            :*mock-calls*
            :call-times-for
-           :verify-call-times-for))
+           :verify-call-times-for
+           :clear-calls))
 
 (uiop:define-package :cl-stub/src/mock
     (:nicknames :mock)
@@ -28,41 +29,50 @@
 
 (in-package :cl-stub/src/cl-stub)
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Language macros ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun fn-names-from (fdefs)
-  (mapcar #'first fdefs))
+(defmacro fn-names-from (fdefs)
+  `(mapcar #'first ,fdefs))
 
-(defun returns-from (fdefs)
-  (mapcar #'second fdefs))
+(defmacro returns-from (fdefs)
+  `(mapcar #'second ,fdefs))
 
-(defun register-mock-call-for (fn args)
-  (rplacd (mock-calls-spec-for fn)
-           (append (list args)
-                   (mock-calls-for fn))))
+(defmacro register-mock-call-for (fn args)
+  `(rplacd (mock-calls-spec-for ,fn)
+           (append (list ,args)
+                   (mock-calls-for ,fn))))
 
-(defun register-mock-fn (fn)
-  (setf *mock-calls* (acons (string fn) '() *mock-calls*)))
+(defmacro register-mock-fn (fn)
+  `(setf *mock-calls* (acons (string ,fn) '() *mock-calls*)))
 
-(defun mock-fn-registered-p (fn)
-  (mock-calls-spec-for fn))
+(defmacro mock-fn-registered-p (fn)
+  `(mock-calls-spec-for ,fn))
 
-(defun mock-calls-spec-for (fn-name)
+(defmacro mock-calls-spec-for (fn-name)
     "Accessor function for the special *mock-calls* variable.
    Returns the full spec."
-    (assoc (string fn-name) *mock-calls* :test #'string=))
+    `(assoc (string ,fn-name) *mock-calls* :test #'string=))
 
-(defun mock-calls-for (fn-name)
+(defmacro mock-calls-for (fn-name)
     "Accessor function for the special *mock-calls* variable.
    Returns the value associated with the function."
-    (cdr (mock-calls-spec-for fn-name)))
+    `(cdr (mock-calls-spec-for ,fn-name)))
 
-(defun call-times-for (fn-name)
-    (length (assoc-value *mock-calls* (string fn-name)
-                         :test #'string=)))
+(defmacro call-times-for (fn-name)
+    `(length (assoc-value *mock-calls* (string ,fn-name)
+                          :test #'string=)))
+
+(defun defined-fns-bound-p (fdefs)
+  (with-simple-restart (ignore "Ignore error.")
+      (let ((fn-names (fn-names-from fdefs)))
+        (mapcar (lambda (name)
+                  (if (fboundp name)
+                      t
+                      (undefined-stub-function-error name)))
+                fn-names))
+      t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Basic function stubbing and mocking ;;;
@@ -77,19 +87,22 @@
     (mapcar (lambda (name stub-return)
                  `(,name (&rest ,args)
                         (unless (mock-fn-registered-p ',name)
-                            (register-mock-fn ',name))
-                          (register-mock-call-for ',name ,args)
-                          ,stub-return))
+                          (register-mock-fn ',name))
+                        (register-mock-call-for ',name ,args)
+                        (typecase ,stub-return
+                          (function (apply ,stub-return ,args))
+                          (t  ,stub-return))))
             fn-names stub-returns)))
 
 (defmacro with-stubs ((&rest fdefs) &body body)
  "The stub macro. Lexically binds a new stub function in place
   and returns a constant supplied value. Calls are counted and
   the arguments are saved in the dynamic variable *mock-calls*."
- `(let* ((*mock-calls* (if (boundp *mock-calls*)
+ `(let* ((*mock-calls* (if (boundp '*mock-calls*)
                                  *mock-calls*
                                  '())))
     (declare (special *mock-calls*))
+    (defined-fns-bound-p ',fdefs)
     (flet  ,(flet-spec fdefs)
         ,@body)))
 
@@ -143,3 +156,19 @@
               (setf (symbol-function ',fname) ,fun)
               (unwind-protect (progn ,@body)
                 (fmakunbound ',fname))))))
+
+
+;;;;;;;;;;;;;;
+;;; Error. ;;;
+;;;;;;;;;;;;;;
+
+(define-condition undefined-stub-function (undefined-function) ()
+  (:report (lambda (condition stream)
+             (format stream "The defined stub function for ~s does not ~
+                          have a defined original." (cell-error-name condition))))
+  (:documentation
+   (format nil "Error: ")))
+
+(defun undefined-stub-function-error (name)
+  "The error function for undefined-stub-function."
+  (error 'undefined-stub-function :name name))
