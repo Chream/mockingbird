@@ -70,8 +70,10 @@
     (foo 5)
     (bar 10)
     (foo 10)
+    (add 3 4)
     (is (call-times-for 'foo) 2 "foo calls 2.")
-    (is (call-times-for 'bar) 1 "bar calls 1.")))
+    (is (call-times-for 'bar) 1 "bar calls 1.")
+    (is (call-times-for 'add) 0 "add calls 1 (not stubbed.).")))
 
 (defun verify-call-times-for-test ()
   (diag "Testing in (verify-call-times-for-test).")
@@ -84,6 +86,15 @@
     (bar 2345)
     (ok (verify-call-times-for 'foo 2) "foo calls 2,")
     (ok (verify-call-times-for 'bar 3) "bar calls 3.")))
+
+(defun clear-calls-test ()
+  (diag "Testing on (clear-calls-test).")
+  (with-stubs ((foo 10) (bar 20))
+    (foo 10)
+    (foo 20)
+    (ok (verify-call-times-for 'foo 2) "Is counted.")
+    (is (clear-calls) (values) "no return (clear-cells).")
+    (ok (verify-call-times-for 'foo 0) "Is cleared.")))
 
 (defun with-stubs-test ()
   (diag "Testing in (with-stubs-test).")
@@ -118,16 +129,38 @@
         (is (foo 5) 10 "Nested integer shadow (foo) ok.")
         (is (bar 5) 20 "Nested integer shadow (bar) ok.")
         (ok (verify-call-times-for 'foo 2) "nested call times (foo) ok.")
-        (ok (verify-call-times-for 'bar 2) "nested call times (bar) ok.")))))
+        (ok (verify-call-times-for 'bar 2) "nested call times (bar) ok."))()))
+  (subtest "Testing (clear-calls)."
+    (clear-calls-test)))
 
 (defun with-mocks-test ()
   (diag "Testing in with-mocks-test.")
   (subtest "Testing mock function return values."
     (with-mocks (foo bar)
       (is (foo 5) nil "is nil.")
-      (is (bar 10 15) nil "is nil."))))
+      (is (bar 10 15) nil "is nil.")
+      (is (baz 10) 30 "is not special.")))
+  (subtest "Testing nested (with-mock),"
+    (with-mocks (foo bar)
+      (with-mocks (foo bar)
+        (is (foo 20) nil "foo is nil.")
+        (is (bar 10) nil "bar is nil")
+        (is (baz 20) 60 "not special.")))))
 
-(plan 9)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (defun with-dynamic-stubs-test ()                     ;;
+;;   (diag "Testing in (with-dynamic-stubs-test).")      ;;
+;;   (with-dynmaic-stubs                                 ;;
+;;       ((add 10) (sub 5) (mul 'mul)                    ;;
+;;        (lam (lambda () 'rebound)) (baz 10)            ;;
+;;        (foo 5) (bar 10))                              ;;
+;;     (is (add 5 3) 10 "(add) is lexically rebound.")   ;;
+;;     (is (sub 2 3) 5 "(sub) Is lexiaclly rebound")     ;;
+;;     (is (lam 2) 'rebound "(lam) is lexically bound.") ;;
+;;     (is (baz 50) 15 "is dynamicly bound")))           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(plan 11)
 (init-test)
 (*mock-calls*-init-test)
 (with-stubs-test)
