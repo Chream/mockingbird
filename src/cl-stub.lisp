@@ -17,7 +17,7 @@
   (:documentation
    "")
 
-  (:export :stub-fn :with-stubs :with-mocks :with-shadow
+  (:export :stub-fn :with-stubs :with-mocks :with-dynamic-stubs
            :*mock-calls*
            :call-times-for
            :verify-call-times-for
@@ -29,39 +29,39 @@
 
 (in-package :cl-stub/src/cl-stub)
 
-;;;;;;;;;;;;;;;;;;;;;;;
-;;; Language macros ;;;
-;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;
+;;; Language ;;;
+;;;;;;;;;;;;;;;;
 
-(defmacro fn-names-from (fdefs)
-  `(mapcar #'first ,fdefs))
+(defun fn-names-from (fdefs)
+  (mapcar #'first fdefs))
 
-(defmacro returns-from (fdefs)
-  `(mapcar #'second ,fdefs))
+(defun returns-from (fdefs)
+  (mapcar #'second fdefs))
 
-(defmacro register-mock-call-for (fn args)
-  `(rplacd (mock-calls-spec-for ,fn)
-           (append (list ,args)
-                   (mock-calls-for ,fn))))
+(defun register-mock-call-for (fn args)
+  (rplacd (mock-calls-spec-for fn)
+           (append (list args)
+                   (mock-calls-for fn))))
 
-(defmacro register-mock-fn (fn)
-  `(setf *mock-calls* (acons (string ,fn) '() *mock-calls*)))
+(defun register-mock-fn (fn)
+  (setf *mock-calls* (acons (string fn) '() *mock-calls*)))
 
-(defmacro mock-fn-registered-p (fn)
-  `(mock-calls-spec-for ,fn))
+(defun mock-fn-registered-p (fn)
+  (mock-calls-spec-for fn))
 
-(defmacro mock-calls-spec-for (fn-name)
+(defun mock-calls-spec-for (fn-name)
     "Accessor function for the special *mock-calls* variable.
    Returns the full spec."
-    `(assoc (string ,fn-name) *mock-calls* :test #'string=))
+    (assoc (string fn-name) *mock-calls* :test #'string=))
 
-(defmacro mock-calls-for (fn-name)
+(defun mock-calls-for (fn-name)
     "Accessor function for the special *mock-calls* variable.
    Returns the value associated with the function."
-    `(cdr (mock-calls-spec-for ,fn-name)))
+    (cdr (mock-calls-spec-for fn-name)))
 
-(defmacro call-times-for (fn-name)
-    `(length (assoc-value *mock-calls* (string ,fn-name)
+(defun call-times-for (fn-name)
+    (length (assoc-value *mock-calls* (string fn-name)
                           :test #'string=)))
 
 (defun defined-fns-bound-p (fdefs)
@@ -126,7 +126,7 @@
      (= ,number (call-times-for ,fn-name))))
 
 (defun nth-arglist-for (n fn-name)
-  ())
+  '())
 
 (defmacro verify-nth-call-args-for (n fn-name &rest args)
     `(is (equal ,args (nth (decf ,n) (assoc-value *mock-calls* ,fn-name)))))
@@ -137,11 +137,12 @@
 
 (defun clear-calls ()
     (declare (special *mock-calls*))
-    (setf *mock-calls* '()))
+    (setf *mock-calls* '())
+    (values))
 
 
 ;; http://stackoverflow.com/questions/3074812/common-lisp-redefine-an-existing-function-within-a-scope
-(defmacro! with-shadow ((fname fun) &body body)
+(defmacro! with-dynamic-stubs ((fname fun) &body body)
   "Shadow the function named fname with fun. Any call to fname
    within body will use fun, instead of the default function for fname.
    This macro is intentionally unhygienic: fun-orig is the anaphor,
