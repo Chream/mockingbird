@@ -48,6 +48,20 @@ These also work for the dynamic and mocking variants.
 
 ## Installation
 
+Clone this repository and put into asdf load path then
+```
+(ql:quickload :cl-mock)
+```
+
+To run tests first compile and load "cl-mock-test"
+```
+(ql:quickload :cl-mock-test)
+```
+Then run
+```
+(asdf:test-system :cl-mock)
+```
+
 ## Author
 
 * Christopher Eames (Chream) (chream@gmx.com)
