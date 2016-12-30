@@ -1,7 +1,7 @@
-;;;; cl-stub/src/cl-stub.lisp
+;;;; cl-mock/src/cl-mock.lisp
 
 (in-package :cl-user)
-(uiop:define-package :cl-stub/src/cl-stub
+(uiop:define-package :cl-mock/src/cl-mock
     (:use :closer-common-lisp)
   (:mix :fare-utils
         :uiop
@@ -21,7 +21,7 @@
            :verify-call-times-for
            :clear-calls))
 
-(in-package :cl-stub/src/cl-stub)
+(in-package :cl-mock/src/cl-mock)
 
 ;;;;;;;;;;;;;;;;;;
 ;;; Interface. ;;;

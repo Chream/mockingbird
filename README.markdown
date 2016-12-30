@@ -1,4 +1,4 @@
-# Cl-Stub
+# Cl-Mock
 
 This package provides to macros for unit testing ```with-stub``` and ```with-mock```. They are used when specified functions in a test
 should not be computed but should instead return a provided constant value.
@@ -9,7 +9,7 @@ should not be computed but should instead return a provided constant value.
 (uiop:define-package :my-project
     (:use :closer-common-lisp
           :prove
-          :cl-stub))
+          :cl-mock))
 (in-package :my-project)
 
 (defun foo (x) x)

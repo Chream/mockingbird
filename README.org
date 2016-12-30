@@ -1,4 +1,4 @@
-* Cl-Stub 
+* Cl-Mock
 
 ** Usage
 

@@ -1,11 +1,11 @@
-;;;; cl-stub/t/all.lisp
+;;;; cl-mock/t/all.lisp
 
 (in-package :cl-user)
-(uiop:define-package  :cl-stub/t/all
-    (:nicknames :cl-stub.test)
+(uiop:define-package  :cl-mock/t/all
+    (:nicknames :cl-mock.test)
   (:use :closer-common-lisp)
-  (:use-reexport :cl-stub/t/cl-stub)
+  (:use-reexport :cl-mock/t/cl-mock)
   (:documentation
    ""))
 
-(in-package :cl-stub.test)
+(in-package :cl-mock.test)

@@ -1,10 +1,10 @@
-;;;; cl-stub/t/cl-stub.lisp
+;;;; cl-mock/t/cl-mock.lisp
 
 (in-package :cl-user)
-(uiop:define-package  :cl-stub/t/cl-stub
+(uiop:define-package  :cl-mock/t/cl-mock
     (:use :closer-common-lisp
           :prove
-          :cl-stub)
+          :cl-mock)
   (:mix :fare-utils
         :uiop
         :alexandria)
@@ -13,9 +13,9 @@
 
   (:export :run-tests))
 
-(in-package :cl-stub/t/cl-stub)
+(in-package :cl-mock/t/cl-mock)
 
-;; NOTE: To run this test file, execute `(asdf:test-system :cl-stub)' in your Lisp.
+;; NOTE: To run this test file, execute `(asdf:test-system :cl-mock)' in your Lisp.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Parameters/Constants/Functions ;;;
