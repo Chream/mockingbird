@@ -24,7 +24,6 @@
 (setf prove:*enable-colors* t)
 (setf *default-reporter* :list)
 
-
 (defun foo (x) x)
 (defun bar (x y) (+ x y))
 (defun baz (x)
@@ -131,12 +130,12 @@
         (is (foo 5) 10 "Nested integer shadow (foo) ok.")
         (is (bar 5) 20 "Nested integer shadow (bar) ok.")
         (ok (verify-call-times-for 'foo 2) "nested call times (foo) ok.")
-        (ok (verify-call-times-for 'bar 2) "nested call times (bar) ok."))()))
+        (ok (verify-call-times-for 'bar 2) "nested call times (bar) ok."))))
   (subtest "Testing (clear-calls)."
     (clear-calls-test)))
 
 (defun with-mocks-test ()
-  (diag "Testing in with-mocks-test.")
+  (diag "Testing in (with-mocks-test.)")
   (subtest "Testing mock function return values."
     (with-mocks (foo bar)
       (is (foo 5) nil "is nil.")

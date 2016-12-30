@@ -125,48 +125,26 @@
 ;;; Verify call times ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-(defmacro verify-call-times-for (fn-name number)
-  `(progn
-     (= ,number (call-times-for ,fn-name))))
+(defun verify-call-times-for (fn-name number)
+  (= number (call-times-for fn-name)))
 
 (defun nth-arglist-for (n fn-name)
   '())
 
-(defmacro verify-nth-call-args-for (n fn-name &rest args)
-    `(is (equal ,args (nth (decf ,n) (assoc-value *mock-calls* ,fn-name)))))
+(defun verify-nth-call-args-for (n fn-name &rest args)
+  (equal args (nth (1- n) (assoc-value *mock-calls* fn-name))))
 
-(defmacro verify-first-call-args-for (fn-name &rest args)
-    `(verify-nth-call-args-for 1 ,fn-name ,@args))
-
+(defun verify-first-call-args-for (fn-name &rest args)
+    (verify-nth-call-args-for 1 fn-name args))
 
 (defun clear-calls ()
     (declare (special *mock-calls*))
     (setf *mock-calls* '())
     (values))
 
-
-;; http://stackoverflow.com/questions/3074812/common-lisp-redefine-an-existing-function-within-a-scope
-(defmacro! with-dynamic-stubss ((fname fun) &body body)
-  "Shadow the function named fname with fun. Any call to fname
-   within body will use fun, instead of the default function for fname.
-   This macro is intentionally unhygienic: fun-orig is the anaphor,
-   and can be used in body to access the shadowed function"
-  `(let ((fun-orig))
-       (cond ((fboundp ',fname)
-              (setf fun-orig (symbol-function ',fname))
-              (setf (symbol-function ',fname) ,fun)
-              (unwind-protect (progn ,@body)
-                (setf (symbol-function ',fname) fun-orig)))
-             (t
-              (setf (symbol-function ',fname) ,fun)
-              (unwind-protect (progn ,@body)
-                (fmakunbound ',fname))))))
-
-(defun orig-fn-names-from (fdefs)
-  (mapcar (lambda (name)
-            (intern (string (conc-symbol name '-orig))))
-          (fn-names-from fdefs)))
+;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Dynamic stubbing ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun stub-fns-from (fdefs)
   (let* ((stub-returns (returns-from fdefs))
@@ -182,7 +160,7 @@
                     (atom ,stub-return))))
             fn-names stub-returns argss)))
 
-(defun replace-binding-specs (fdefs temp-fn-vars)
+(defun replace-fn-bindings-spec (fdefs temp-fn-vars)
   (let ((fn-names (fn-names-from fdefs))
         (stub-fns (stub-fns-from fdefs)))
     `(progn
@@ -195,7 +173,7 @@
                          (undefined-stub-function-error ',fname))))
                fn-names stub-fns temp-fn-vars))))
 
-(defun rebind-originals (fdefs temp-fn-vars)
+(defun rebind-original-fn-bindings-spec (fdefs temp-fn-vars)
   (let ((fn-names (fn-names-from fdefs)))
     `(progn
        ,@(mapcar
@@ -217,15 +195,13 @@
                             '())))
        (declare (special *mock-calls* ,@temp-fn-vars))
        (defined-fns-bound-p ',fdefs)
-       ,(replace-binding-specs fdefs temp-fn-vars)
+       ,(replace-fn-bindings-spec fdefs temp-fn-vars)
        (unwind-protect (progn ,@body)
-         ,(rebind-originals fdefs temp-fn-vars)))))
+         ,(rebind-original-fn-bindings-spec fdefs temp-fn-vars)))))
 
-
-
-;;;;;;;;;;;;;;
-;;; Error. ;;;
-;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;
+;;; Conditions. ;;;
+;;;;;;;;;;;;;;;;;;;
 
 (define-condition undefined-stub-function (undefined-function) ()
   (:report (lambda (condition stream)
@@ -237,3 +213,27 @@
 (defun undefined-stub-function-error (name)
   "The error function for undefined-stub-function."
   (error 'undefined-stub-function :name name))
+
+
+
+;; ;; http://stackoverflow.com/questions/3074812/common-lisp-redefine-an-existing-function-within-a-scope
+;; (defmacro! with-dynamic-stubss ((fname fun) &body body)
+;;   "Shadow the function named fname with fun. Any call to fname
+;;    within body will use fun, instead of the default function for fname.
+;;    This macro is intentionally unhygienic: fun-orig is the anaphor,
+;;    and can be used in body to access the shadowed function"
+;;   `(let ((fun-orig))
+;;      (cond ((fboundp ',fname)
+;;             (setf fun-orig (symbol-function ',fname))
+;;             (setf (symbol-function ',fname) ,fun)
+;;             (unwind-protect (progn ,@body)
+;;               (setf (symbol-function ',fname) fun-orig)))
+;;            (t
+;;             (setf (symbol-function ',fname) ,fun)
+;;             (unwind-protect (progn ,@body)
+;;               (fmakunbound ',fname))))))
+
+;; (defun orig-fn-names-from (fdefs)
+;;   (mapcar (lambda (name)
+;;             (intern (string (conc-symbol name '-orig))))
+;;           (fn-names-from fdefs)))
