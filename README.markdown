@@ -35,12 +35,12 @@ The arguments passed to mocked or stubbed functions are also saved.
 ```
 (with-stubs ((foo 5))
   (foo 4 5)
-  (call-times-for 'foo)
-  (verify-call-times-for 'foo 1)
-  (nth-mock-args-for 1 'foo)
-  (verify-nth-call-args-for 1 'foo 4 5)
-  (verify-first-call-args-for 'foo 4 5)
-  (clear-calls))
+  (call-times-for 'foo)                  ;; --> 1
+  (verify-call-times-for 'foo 1)         ;; --> T
+  (nth-mock-args-for 1 'foo)             ;; --> '(4 5)
+  (verify-nth-call-args-for 1 'foo 4 5)  ;; --> T
+  (verify-first-call-args-for 'foo 4 5)  ;; --> T
+  (clear-calls))                         ;; --> no-value
 ```
 
 These also work for the dynamic and mocking variants.
