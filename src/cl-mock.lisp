@@ -144,8 +144,7 @@
     `(let ((*mock-calls* (if (boundp '*mock-calls*)
                             *mock-calls*
                             '())))
-       (declare (special *mock-calls* ,@temp-fn-vars)
-                (optimize (safety 0)))
+       (declare (special *mock-calls* ,@temp-fn-vars))
        (defined-fns-bound-p ',fdefs)
        ,(replace-fn-bindings-spec fdefs temp-fn-vars)
        (unwind-protect (progn ,@body)
