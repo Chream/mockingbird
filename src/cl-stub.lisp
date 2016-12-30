@@ -155,9 +155,11 @@
                   (unless (mock-fn-registered-p ',name)
                     (register-mock-fn ',name))
                   (register-mock-call-for ',name ,args)
-                  (etypecase ,stub-return
-                    (function (apply ,stub-return ,args))
-                    (atom ,stub-return))))
+                  (restart-case
+                      (etypecase ,stub-return
+                        (function (apply ,stub-return ,args))
+                        (atom ,stub-return))
+                    (just-return-value () ,stub-return))))
             fn-names stub-returns argss)))
 
 (defun replace-fn-bindings-spec (fdefs temp-fn-vars)
@@ -190,7 +192,7 @@
   (let* ((fn-names (fn-names-from fdefs))
          (temp-fn-vars (loop :for fn in fn-names
                           :collect (gensym (format nil "~S-orig" fn)))))
-    `(let ((*mock-calls* (if (boundp *mock-calls*)
+    `(let ((*mock-calls* (if (boundp '*mock-calls*)
                             *mock-calls*
                             '())))
        (declare (special *mock-calls* ,@temp-fn-vars))
