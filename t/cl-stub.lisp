@@ -34,22 +34,23 @@
 (defun mul (x y) (* x y))
 (defun fun () (funcall (lambda () 'fun)))
 (defun lam () (lambda () 'lam))
+(defun sym () 'some-symbol)
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Test functions. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun init-test ()
-  (diag "Testing in with-stubs-test.")
-  (subtest "Init tests."
-    (is (foo 5) 5 "(foo) returns correctly.")
-    (is (bar 5 10) 15 "(bar) returns correctly.")
-    (is (baz 30) 90 "returns correctly.")
-    (is (add 30 30) 60 "(add) returns correctly.")
-    (is (sub 30 30) 0 "(sub) returns correctly.")
-    (is (mul 30 30) 900 "(mul) returns correctly.")
-    (is (fun) 'fun "(fun) returns correctly.")
-    (is-type (lam) 'function "(add) returns correctly.")))
+  (diag "Init tests.")
+  (is (foo 5) 5 "(foo) returns correctly.")
+  (is (bar 5 10) 15 "(bar) returns correctly.")
+  (is (baz 30) 90 "returns correctly.")
+  (is (add 30 30) 60 "(add) returns correctly.")
+  (is (sub 30 30) 0 "(sub) returns correctly.")
+  (is (mul 30 30) 900 "(mul) returns correctly.")
+  (is (fun) 'fun "(fun) returns correctly.")
+  (is-type (lam) 'function "(add) returns correctly.")
+  (is (sym) 'some-symbol "(sym) returns correctly"))
 
 (defun *mock-calls*-init-test ()
   (diag "Testing *mock-calls* variable.")
@@ -100,11 +101,12 @@
   (diag "Testing in (with-stubs-test).")
   (subtest "Testing (with-stubs) return values."
     (with-stubs
-        ((foo 99) (bar 99) (baz 99))
+        ((foo 99) (bar 99) (baz 99) (sym 'another-symbol))
       (is (foo 5) 99 "(foo) is lexically stubbed.")
       (is *mock-calls* (acons "FOO" (list '(5)) '())
           "*mocks-calls* is special.")
       (is (bar 5 10) 99 "(bar) is lexically stubbed.")
+      (is (sym 3) 'another-symbol "(sym) is lexically stubbed.")
       (is (baz 10) 99 "(foo) and (bar) not specially stubbed.")))
   (subtest "Testing call times."
     (call-times-for-test)
@@ -147,23 +149,23 @@
         (is (bar 10) nil "bar is nil")
         (is (baz 20) 60 "not special.")))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (defun with-dynamic-stubs-test ()                     ;;
-;;   (diag "Testing in (with-dynamic-stubs-test).")      ;;
-;;   (with-dynmaic-stubs                                 ;;
-;;       ((add 10) (sub 5) (mul 'mul)                    ;;
-;;        (lam (lambda () 'rebound)) (baz 10)            ;;
-;;        (foo 5) (bar 10))                              ;;
-;;     (is (add 5 3) 10 "(add) is lexically rebound.")   ;;
-;;     (is (sub 2 3) 5 "(sub) Is lexiaclly rebound")     ;;
-;;     (is (lam 2) 'rebound "(lam) is lexically bound.") ;;
-;;     (is (baz 50) 15 "is dynamicly bound")))           ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun with-dynamic-stubs-test ()
+  (diag "Testing in (with-dynamic-stubs-test).")
+  (subtest "Testing initial functions."
+    (init-test))
+  (subtest "Testing dynamic binding."
+    (with-dynamic-stubs
+        ((foo 99) (bar 98))
+      (is (foo 123) 99 "(foo) is lexically rebound.")
+      (is (bar 23) 98 "(bar) Is lexiaclly rebound.")
+      (is (baz 50) 197 "(foo) and (bar) is dynamically bound"))
+    (subtest "Testing functions correctly rebound."
+      (init-test))))
 
-(plan 11)
+(plan 21)
 (init-test)
 (*mock-calls*-init-test)
 (with-stubs-test)
 (with-mocks-test)
-
+(with-dynamic-stubs-test)
 (finalize)
