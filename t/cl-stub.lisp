@@ -11,7 +11,7 @@
   (:documentation
    "")
 
-  (:export :init-test :with-stubs-test))
+  (:export))
 
 (in-package :cl-stub/t/cl-stub)
 
@@ -22,13 +22,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setf prove:*enable-colors* t)
-(setf *default-reporter* :list)
+(setf *default-reporter* :dot)
 (setf prove:*debug-on-error* t)
+
+(declaim (sb-ext:muffle-conditions cl:style-warning))
 
 (defun foo (x) x)
 (defun bar (x y) (+ x y))
 (defun baz (x)
-    (+ (foo x) (bar x x)))
+  (+ (foo x) (bar x x)))
+(defun fom (x)
+  (list (foo x)))
+(defun fob (x)
+  (bar x x))
 (defun add (x y) (+ x y))
 (defun sub (x y) (- x y))
 (defun mul (x y) (* x y))
@@ -44,7 +50,9 @@
   (diag "Init tests.")
   (is (foo 5) 5 "(foo) returns correctly.")
   (is (bar 5 10) 15 "(bar) returns correctly.")
-  (is (baz 30) 90 "returns correctly.")
+  (is (baz 30) 90 "(baz) returns correctly.")
+  (is (fom 5) '(5) "(fom) returns correctly.")
+  (is (fob 5) 10 "(fob) returns correctly.")
   (is (add 30 30) 60 "(add) returns correctly.")
   (is (sub 30 30) 0 "(sub) returns correctly.")
   (is (mul 30 30) 900 "(mul) returns correctly.")
@@ -197,7 +205,7 @@
          (fun (funcall (lambda () 10))) (lam (lambda (x) (+ x 1)))
          (sym 'another-symbol))
       (is (add 10) 11 "Addition ok.")
-      (is (sub 20) -1 "Substraction ok.")
+      (is (sub 20) -1 "Subtraction ok.")
       (is (mul 5) 20 "Multiplication ok.")
       (is (fun 1) 10 "Simple funcalled lambda expression ok.")
       (is (lam 20) 21 "Lambda expression ok.")
@@ -226,10 +234,20 @@
       (is (call-times-for 'foo) 4 "Outer call times = 4 (foo) ok.")
       (is (call-times-for 'bar) 4 "Outer call times = 4 (bar) ok."))))
 
-(plan 24)
+(defun with-dynamic-mocks-test ()
+  (diag "Testing in (with-dynamic-mocks-test).")
+  (subtest "Testing in (with-dynamic-mocks)."
+    (with-dynamic-mocks (foo bar)
+      (is (foo 5) nil "foo is mocked.")
+      (is (bar 10) nil "bar is mocked.")
+      (is (fom 5) '(nil) "(foo) dynamically mocked ok.")
+      (is (fob 5) nil "(bar) dynamically mocked ok."))))
+
+(plan 27)
 (init-test)
 (*mock-calls*-init-test)
 (with-stubs-test)
 (with-mocks-test)
 (with-dynamic-stubs-test)
+(with-dynamic-mocks-test)
 (finalize)

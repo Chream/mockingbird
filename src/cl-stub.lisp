@@ -17,7 +17,8 @@
   (:documentation
    "")
 
-  (:export :stub-fn :with-stubs :with-mocks :with-dynamic-stubs
+  (:export :with-stubs :with-mocks
+           :with-dynamic-stubs :with-dynamic-mocks
            :*mock-calls*
            :call-times-for
            :verify-call-times-for
@@ -106,11 +107,6 @@
     (flet  ,(flet-spec fdefs)
       ,@body)))
 
-(defun special-decls-from (fdefs)
-  `(declare (special ,@(mapcar (lambda (name)
-                                 name)
-                               (fn-names-from fdefs)))))
-
 (defmacro with-mocks ((&rest fn-names) &body body)
   "The mock macro. Lexically binds a new mock function which
    will return nil. Calls are counted and the arguments are saved
@@ -195,11 +191,19 @@
     `(let ((*mock-calls* (if (boundp '*mock-calls*)
                             *mock-calls*
                             '())))
-       (declare (special *mock-calls* ,@temp-fn-vars))
+       (declare (special *mock-calls* ,@temp-fn-vars)
+                (optimize (safety 0)))
        (defined-fns-bound-p ',fdefs)
        ,(replace-fn-bindings-spec fdefs temp-fn-vars)
        (unwind-protect (progn ,@body)
          ,(rebind-original-fn-bindings-spec fdefs temp-fn-vars)))))
+
+(defmacro with-dynamic-mocks ((&rest fn-names) &body body)
+  `(with-dynamic-stubs ,(mapcar #'list
+                                fn-names
+                                (make-list (length fn-names)
+                                           :initial-element nil))
+     ,@body))
 
 ;;;;;;;;;;;;;;;;;;;
 ;;; Conditions. ;;;
