@@ -17,10 +17,17 @@
   :author "Christopher Eames (Chream)"
   :license ""
   :defsystem-depends-on (:prove-asdf)
-  :depends-on ("cl-stub-test/t/all")
-  :perform (test-op :after (op c)
-                    (funcall (intern #.(string :run-test-system) :prove-asdf) c)
-                    (asdf:clear-system c)))
+  :depends-on (:cl-stub
+               :prove
+               "cl-stub/t/all")
+  :components
+  ((:test-file "t/main"))
+  :perform (test-op (o s)
+                    (uiop:symbol-call :prove '#:run s)
+                    (asdf:clear-system s)))
+
+
+
 
 (register-system-packages
  "closer-mop"

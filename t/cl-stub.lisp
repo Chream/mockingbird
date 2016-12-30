@@ -11,7 +11,7 @@
   (:documentation
    "")
 
-  (:export))
+  (:export :run-tests))
 
 (in-package :cl-stub/t/cl-stub)
 
@@ -21,11 +21,21 @@
 ;;; Parameters/Constants/Functions ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setf prove:*enable-colors* t)
-(setf *default-reporter* :dot)
-(setf prove:*debug-on-error* t)
+;; (setf prove:*enable-colors* t)
+;; (setf *default-reporter* :list)
+;; (setf prove:*debug-on-error* t)
 
-(declaim (sb-ext:muffle-conditions cl:style-warning))
+#+sbcl (declaim (sb-ext:muffle-conditions))
+
+(defun run-tests ()
+  (plan 29)
+  (init-test)
+  (*mock-calls*-init-test)
+  (with-stubs-test)
+  (with-mocks-test)
+  (with-dynamic-stubs-test)
+  (with-dynamic-mocks-test)
+  (finalize))
 
 (defun foo (x) x)
 (defun bar (x y) (+ x y))
@@ -96,6 +106,18 @@
     (ok (verify-call-times-for 'foo 2) "foo calls 2,")
     (ok (verify-call-times-for 'bar 3) "bar calls 3.")))
 
+(defun mock-args-test ()
+  (diag "Testing mock arguments collection in (with-stubs).")
+  (with-stubs ((foo 5))
+    (foo 1)
+    (foo 2 3)
+    (foo "string")
+    (foo 'symbol)
+    (is (nth-mock-args-for 1 'foo) '(1) "First args was 1 ok.")
+    (is (nth-mock-args-for 2 'foo) '(2 3) "Second args was 1 ok.")
+    (is (nth-mock-args-for 3 'foo) '("string") "Third args was 1 ok.")
+    (is (nth-mock-args-for 4 'foo) '(symbol) "Fourth arg was 1 ok.")))
+
 (defun clear-calls-test ()
   (diag "Testing on (clear-calls-test).")
   (with-stubs ((foo 10) (bar 20))
@@ -145,7 +167,9 @@
       (is (call-times-for 'foo) 2 "Outer call times (foo) = 2 ok.")
       (is (call-times-for 'bar) 2 "Outer call times (bar) = 2 ok.")))
   (subtest "Testing (clear-calls)."
-    (clear-calls-test)))
+    (clear-calls-test))
+  (subtest "Testing argument capture."
+    (mock-args-test)))
 
 (defun with-mocks-test ()
   (diag "Testing in (with-mocks-test.)")
@@ -186,6 +210,20 @@
     (baz 10)
     (ok (verify-call-times-for 'foo 3) "foo calls 2.")
     (ok (verify-call-times-for 'bar 4) "bar calls 3.")))
+
+(defun dynamic-mock-args-test ()
+  (diag "Testing mock arguments collection in (with-stubs).")
+  (with-dynamic-stubs ((foo 5))
+    (foo 1)
+    (foo 2 3)
+    (fom "string")
+    (fom 'symbol)
+    (is (nth-mock-args-for 1 'foo) '(1) "First args was 1 ok.")
+    (is (nth-mock-args-for 2 'foo) '(2 3) "Second args was 1 ok.")
+    (is (nth-mock-args-for 3 'foo) '("string") "Third args was 1 ok.")
+    (is (nth-mock-args-for 4 'foo) '(symbol) "Fourth arg was 1 ok.")
+    (ok (verify-nth-call-args-for 2 'foo 2 3) "nth arg verify ok.")
+    (ok (verify-first-call-args-for 'foo 1) "First arg verify ok.")))
 
 (defun with-dynamic-stubs-test ()
   (diag "Testing in (with-dynamic-stubs-test).")
@@ -232,7 +270,9 @@
         (is (call-times-for 'foo) 4 "nested call times (foo) ok.")
         (is (call-times-for 'bar) 4 "nested call times (bar) ok."))
       (is (call-times-for 'foo) 4 "Outer call times = 4 (foo) ok.")
-      (is (call-times-for 'bar) 4 "Outer call times = 4 (bar) ok."))))
+      (is (call-times-for 'bar) 4 "Outer call times = 4 (bar) ok.")))
+  (subtest "Testing argument capture."
+    (dynamic-mock-args-test)))
 
 (defun with-dynamic-mocks-test ()
   (diag "Testing in (with-dynamic-mocks-test).")
@@ -242,12 +282,3 @@
       (is (bar 10) nil "bar is mocked.")
       (is (fom 5) '(nil) "(foo) dynamically mocked ok.")
       (is (fob 5) nil "(bar) dynamically mocked ok."))))
-
-(plan 27)
-(init-test)
-(*mock-calls*-init-test)
-(with-stubs-test)
-(with-mocks-test)
-(with-dynamic-stubs-test)
-(with-dynamic-mocks-test)
-(finalize)

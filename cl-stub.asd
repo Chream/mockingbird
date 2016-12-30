@@ -34,7 +34,7 @@
                                :fill-pointer t)))
           (setf (fill-pointer seq) (read-sequence seq stream))
           seq)))
-  :in-order-to ((test-op (test-op cl-stub-test))))
+  :in-order-to ((test-op (test-op "cl-stub-test"))))
 
 (register-system-packages
  "closer-mop"
