@@ -207,8 +207,7 @@
   (:report (lambda (condition stream)
              (format stream "The defined stub function for ~s does not ~
                           have a defined original." (cell-error-name condition))))
-  (:documentation
-   (format nil "Error: ")))
+  (:documentation "Error: "))
 
 (defun undefined-stub-function-error (name)
   "The error function for undefined-stub-function."
