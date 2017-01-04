@@ -4,16 +4,28 @@
 (uiop:define-package  :cl-mock/t/with-methods
     (:use :closer-common-lisp
           :prove
-          :cl-mock/src/with-methods)
+          :cl-mock/src/all)
   (:mix :fare-utils
         :uiop
         :alexandria)
   (:documentation
    "")
 
-  (:export ))
+  (:export :with-methods-test))
 
 (in-package :cl-mock/t/with-methods)
+
+;;;;;;;;;;;;;;;;;;
+;;; Main tests ;;;
+;;;;;;;;;;;;;;;;;;
+
+(defun with-methods-test ()
+  (init-tests)
+  (with-method-stubs-test))
+
+;;;;;;;;;;;;;;;;;;
+;;; Parameters ;;;
+;;;;;;;;;;;;;;;;;;
 
 (defparameter *class-objects*
   (list
@@ -58,6 +70,10 @@
   (list (stub-def 'foo 'baclass 'baclass)
         (stub-def 'foo 'aclass 'aclass)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Tests Implementation ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (macrolet ((var-test (arg)
              `(is-type ,(conc-symbol '* arg '*)
                        ',arg
@@ -88,16 +104,26 @@
 
 (defun with-method-stubs-test ()
   (diag "Testing in (with-method-stubs-test).")
-  (subtest "Testing in binding"
-    (with-method-stubs ((foo (x y) 'is-stubbed))
+  (with-method-stubs ((foo (x y) 'is-stubbed)
+                      (foo ((x aclass) (y aclass)) 'aclass-stubbed))
+
+    (subtest "Testing environment."
+      (is (length (generic-function-methods *foo-gf*)) 5
+          "5 defined methods.")
+      (is-error (with-method-stubs ((foo ((x caclass) y) ()))
+                  (foo 1 2)) 'undefined-stub-method
+                  "`undefined-stub-method' error signaled ok."))
+
+    (subtest "Testing binding and returns."
       (is (foo 1 2) 'is-stubbed "(foo 1 2) is lexically stubbed.")
       (is (bar 1 2) 'is-stubbed "(foo 1 2) is dynamically stubbed.")))
+
   (subtest "Testing rebinding of methods."
     (init-tests)))
 
-;;;;;;;;;;;;;;;;;;;;;;;
-;;; Function tests. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Function tests/Utils. ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun gf-metaobjects-from-test ()
   (diag "Testing in (gf-metaobjects-from-test).")
