@@ -28,14 +28,12 @@
 #+sbcl (declaim (sb-ext:muffle-conditions))
 
 (defun run-tests ()
-  (plan 29)
   (init-test)
   (*mock-calls*-init-test)
   (with-stubs-test)
   (with-mocks-test)
   (with-dynamic-stubs-test)
-  (with-dynamic-mocks-test)
-  (finalize))
+  (with-dynamic-mocks-test))
 
 (defun foo (x) x)
 (defun bar (x y) (+ x y))
