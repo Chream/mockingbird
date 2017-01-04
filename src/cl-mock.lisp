@@ -19,7 +19,10 @@
            :verify-nth-call-args-for
            :verify-first-call-args-for
            :verify-call-times-for
-           :clear-calls))
+           :clear-calls
+
+           :undefined-function
+           :undefined-stub-function-error))
 
 (in-package :cl-mock/src/cl-mock)
 

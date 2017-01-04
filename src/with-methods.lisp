@@ -20,7 +20,10 @@
            :method-spec-from
            :method-metaobjects-from
            :remove-methods-for
-           :add-methods-for))
+           :add-methods-for
+
+           :undefined-stub-method
+           :undefined-stub-function-error))
 
 (in-package :cl-mock/src/with-methods)
 

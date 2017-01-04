@@ -3,6 +3,7 @@
 (in-package :cl-user)
 (uiop:define-package  :cl-mock/t/main
     (:use :closer-common-lisp
+          :prove
           :cl-mock/t/all)
   (:mix :fare-utils
         :uiop
@@ -14,4 +15,7 @@
 
 (in-package :cl-mock/t/main)
 
+(plan 35)
 (run-tests)
+(with-methods-tests)
+(finalize)

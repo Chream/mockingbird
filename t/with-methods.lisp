@@ -11,7 +11,7 @@
   (:documentation
    "")
 
-  (:export :with-methods-test))
+  (:export :with-methods-tests))
 
 (in-package :cl-mock/t/with-methods)
 
@@ -19,7 +19,7 @@
 ;;; Main tests ;;;
 ;;;;;;;;;;;;;;;;;;
 
-(defun with-methods-test ()
+(defun with-methods-tests ()
   (init-tests)
   (with-method-stubs-test))
 
