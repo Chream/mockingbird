@@ -79,6 +79,35 @@
         generic-fn specializers))
      generic-fns specializers-list)))
 
+;;;;;;;;;;;;;;;;;;;;;;
+;;; MOP extension. ;;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric method-combination-type-name (method-combination))
+(defgeneric method-combination-type-options (method-combination))
+(defgeneric gneric-function-method-combination-name (generic-functions))
+(defgeneric gneric-function-method-combination-options (generic-functions))
+
+(defmethod method-combination-type-name ((object method-combination))
+  #+sbcl (sb-pcl::method-combination-type-name object)
+  #+ccl (ccl::method-combination-name object))
+
+(defmethod method-combination-options ((object method-combination))
+  #+sbcl (sb-pcl::method-combination-options object)
+  #+ccl (ccl::method-combination-options object))
+
+(defmethod generic-function-method-combination-name
+    ((object generic-function))
+  (method-combination-type-name
+   (generic-function-method-combination object)))
+
+(defmethod generic-function-method-combination-options
+    ((object generic-function))
+  (method-combination-options
+   (generic-function-method-combination object)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun method-metaobjects-from (method-defs)
   (let* ((gf-objects (gf-metaobjects-from method-defs))
          (original-methods/list (mapcar #'generic-function-methods
