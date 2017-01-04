@@ -58,7 +58,7 @@
                    ,applicable-method-objects/list))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;
-;;; objects/Utils ;;;
+;;; Language/Utils ;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (defun specializers/list-from (method-objects)
@@ -75,8 +75,22 @@
          (specializers-list (specializers/list-from method-objects)))
     (mapcar
      (lambda (generic-fn specializers)
-       (compute-applicable-methods-using-classes
-        generic-fn specializers))
+       (let ((method-comb (generic-function-method-combination-name
+                           generic-fn))
+             (comb-options (generic-function-method-combination-options
+                            generic-fn))
+             (all-applicable-methods
+              (compute-applicable-methods-using-classes
+               generic-fn specializers)))
+         (let ((result (filter-applicable-methods method-comb
+                                                  comb-options
+                                                  all-applicable-methods
+                                                  specializers)))
+           (unless result
+             (undefined-stub-method-error
+              generic-fn
+              specializers))
+           result)))
      generic-fns specializers-list)))
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -105,6 +119,31 @@
     ((object generic-function))
   (method-combination-options
    (generic-function-method-combination object)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric filter-applicable-methods
+    (method-comb-spec comb-options method-objects specializers))
+
+(defmethod filter-applicable-methods
+    ((method-comb-spec (eql 'standard)) comb-options
+     all-applicable-methods specializers)
+  (let ((applicable-method (first all-applicable-methods)))
+    (if (equal (method-specializers applicable-method)
+               specializers)
+        (list applicable-method)
+        nil)))
+
+(defmethod filter-applicable-methods
+    (method-comb comb-options method-objects specializers)
+  (method-combination-error
+   "Error in (filter-applicable-methods ~S S).~
+    Can not stub/mock methods for method combination ~S ~
+    for method ~S with specializers ~S."
+   method-comb method-objects method-comb (generic-function-name
+                                           (method-generic-function
+                                            (first method-objects)))
+   specializers))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -141,3 +180,26 @@
     (generic-function-object applicable-methods-objects)
   (dolist (applicable-method applicable-methods-objects)
     (add-method generic-function-object applicable-method)))
+
+;;;;;;;;;;;;;;;;;;;
+;;; Conditions. ;;;
+;;;;;;;;;;;;;;;;;;;
+
+(define-condition undefined-stub-method (undefined-function)
+  ((specializers :initarg :specializers
+                 :reader undefined-stub-error-specializers
+                 :type list))
+  (:report (lambda (condition stream)
+             (format stream
+                     "The defined stub method for ~&~S~& with ~
+                     with specializers ~&~S~& does not have a ~
+                     defined original."
+                     (cell-error-name condition)
+                     (undefined-stub-error-specializers condition))))
+  (:documentation "Error: "))
+
+(defun undefined-stub-method-error (name specializers)
+  "The error function for undefined-stub-function."
+  (error 'undefined-stub-method
+         :name name
+         :specializers specializers))
