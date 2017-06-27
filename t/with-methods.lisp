@@ -8,6 +8,8 @@
   (:mix :fare-utils
         :uiop
         :alexandria)
+  (:import-from :cl-mock/src/cl-mock
+                :undefined-stub-method)
   (:documentation
    "")
 
