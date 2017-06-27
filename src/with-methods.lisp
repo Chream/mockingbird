@@ -137,6 +137,7 @@
 (defmethod filter-applicable-methods
     ((method-comb-spec (eql 'standard)) comb-options
      all-applicable-methods specializers)
+  (declare (ignore comb-options))
   (let ((applicable-method (first all-applicable-methods)))
     (if (equal (method-specializers applicable-method)
                specializers)
@@ -146,13 +147,13 @@
 (defmethod filter-applicable-methods
     (method-comb comb-options method-objects specializers)
   (method-combination-error
-   "Error in (filter-applicable-methods ~S S).~
-    Can not stub/mock methods for method combination ~S ~
-    for method ~S with specializers ~S."
+   "Error in ~&(filter-applicable-methods ~S S).~& ~
+    Can not stub/mock methods for method combination ~&~S~& ~
+    for method ~&~S~& with specializers ~&~S~& and method combinqtion ~&~S~&."
    method-comb method-objects method-comb (generic-function-name
                                            (method-generic-function
                                             (first method-objects)))
-   specializers))
+   specializers comb-options))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 

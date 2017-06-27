@@ -25,8 +25,6 @@
 ;; (setf *default-reporter* :list)
 ;; (setf prove:*debug-on-error* t)
 
-#+sbcl (declaim (sb-ext:muffle-conditions))
-
 (defun run-tests ()
   (init-test)
   (*mock-calls*-init-test)

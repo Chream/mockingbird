@@ -29,40 +29,41 @@
 ;;; Parameters ;;;
 ;;;;;;;;;;;;;;;;;;
 
-(defparameter *class-objects*
-  (list
-   (defclass aclass () ())
-   (defclass baclass (aclass) ())
-   (defclass caclass (aclass) ())))
+(defclass aclass () ())
+(defclass baclass (aclass) ())
+(defclass caclass (aclass) ())
 
-(defparameter *foo-gf*
-  (defgeneric foo (x y)))
+(defgeneric foo (x y))
 
-(defparameter *original-method-objects*
-  (list
-   (defmethod foo (x y)
-     (declare (ignore x y))
-     'not-stubbed)
-   (defmethod foo ((x aclass) (y aclass))
-     (declare (ignore x y))
-     '(aclass aclass))
-   (defmethod foo ((x baclass) (y aclass))
-     (declare (ignore x y))
-     '(baclass aclass))
-   (defmethod foo ((x aclass) (y baclass))
-     (declare (ignore x y))
-     '(aclass baclass))
-   (defmethod foo ((x baclass) (y baclass))
-     (declare (ignore x y))
-     '(baclass baclass))))
+(defmethod foo (x y)
+  (declare (ignore x y))
+  'not-stubbed)
+(defmethod foo ((x aclass) (y aclass))
+  (declare (ignore x y))
+  '(aclass aclass))
+(defmethod foo ((x baclass) (y aclass))
+  (declare (ignore x y))
+  '(baclass aclass))
+(defmethod foo ((x aclass) (y baclass))
+  (declare (ignore x y))
+  '(aclass baclass))
+(defmethod foo ((x baclass) (y baclass))
+  (declare (ignore x y))
+  '(baclass baclass))
 
 (defun bar (x y)
   (foo x y))
 
-
 (defparameter *aclass* (make-instance 'aclass))
 (defparameter *baclass* (make-instance 'baclass))
 (defparameter *caclass* (make-instance 'caclass))
+
+(defparameter *foo-gf*
+  (symbol-function 'foo))
+(defparameter *class-objects*
+  (mapcar 'class-of (list *aclass* *baclass* *caclass*)))
+(defparameter *method-objects*
+  (generic-function-methods *foo-gf*))
 
 (defun stub-def (fn-name spes1 spes2)
   `(,fn-name ((x ,spes1) (y ,spes2))

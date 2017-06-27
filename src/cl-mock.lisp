@@ -31,6 +31,7 @@
 ;;;;;;;;;;;;;;;;;;
 
 (defun call-times-for (fn-name)
+  (declare (special *mock-calls*))
   (length (assoc-value *mock-calls* (string fn-name)
                        :test #'string=)))
 
@@ -76,13 +77,16 @@
  "The stub macro. Lexically binds a new stub function in place
   and returns a constant supplied value. Calls are counted and
   the arguments are saved in the dynamic variable *mock-calls*."
- `(let* ((*mock-calls* (if (boundp '*mock-calls*)
-                                 *mock-calls*
-                                 '())))
-    (declare (special *mock-calls*))
-    (defined-fns-bound-p ',fdefs)
-    (flet  ,(flet-spec fdefs)
-      ,@body)))
+
+ `(locally
+      (declare #+sbcl(sb-ext:muffle-conditions sb-kernel::simple-warning))
+    (let* ((*mock-calls* (if (boundp '*mock-calls*)
+                             *mock-calls*
+                             '())))
+      (declare (special *mock-calls*))
+      (defined-fns-bound-p ',fdefs)
+      (flet  ,(flet-spec fdefs)
+        ,@body))))
 
 (defmacro with-mocks ((&rest fn-names) &body body)
   "The mock macro. Lexically binds a new mock function which
@@ -144,14 +148,16 @@
   (let* ((fn-names (fn-names-from fdefs))
          (temp-fn-vars (loop :for fn in fn-names
                           :collect (gensym (format nil "~S-orig" fn)))))
-    `(let ((*mock-calls* (if (boundp '*mock-calls*)
-                            *mock-calls*
-                            '())))
-       (declare (special *mock-calls* ,@temp-fn-vars))
-       (defined-fns-bound-p ',fdefs)
-       ,(replace-fn-bindings-spec fdefs temp-fn-vars)
-       (unwind-protect (progn ,@body)
-         ,(rebind-original-fn-bindings-spec fdefs temp-fn-vars)))))
+    `(locally
+         (declare #+sbcl(sb-ext:muffle-conditions sb-kernel::simple-warning))
+       (let ((*mock-calls* (if (boundp '*mock-calls*)
+                               *mock-calls*
+                               '())))
+         (declare (special *mock-calls* ,@temp-fn-vars))
+         (defined-fns-bound-p ',fdefs)
+         ,(replace-fn-bindings-spec fdefs temp-fn-vars)
+         (unwind-protect (progn ,@body)
+           ,(rebind-original-fn-bindings-spec fdefs temp-fn-vars))))))
 
 (defmacro with-dynamic-mocks ((&rest fn-names) &body body)
   `(with-dynamic-stubs ,(mapcar #'list
