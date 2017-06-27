@@ -1,18 +1,18 @@
-;;;; cl-mock/t/cl-mock.lisp
+;;;; mockingbird/t/mockingbird.lisp
 
 (in-package :cl-user)
-(uiop:define-package  :cl-mock/t/cl-mock
+(uiop:define-package :mockingbird/t/functions
     (:use :closer-common-lisp
           :prove
-          :cl-mock)
+          :mockingbird)
   (:documentation
    "")
 
   (:export :run-tests))
 
-(in-package :cl-mock/t/cl-mock)
+(in-package :mockingbird/t/functions)
 
-;; NOTE: To run this test file, execute `(asdf:test-system :cl-mock)' in your Lisp.
+;; NOTE: To run this test file, execute `(asdf:test-system :mockingbird)' in your Lisp.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Parameters/Constants/Functions ;;;

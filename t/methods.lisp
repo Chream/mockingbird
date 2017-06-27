@@ -1,21 +1,21 @@
-;;;; cl-mock/t/with-method-stubs.lisp
+;;;; mockingbird/t/with-method-stubs.lisp
 
 (in-package :cl-user)
-(uiop:define-package  :cl-mock/t/with-methods
+(uiop:define-package  :mockingbird/t/methods
     (:use :closer-common-lisp
           :prove
-          :cl-mock)
+          :mockingbird)
   (:mix :fare-utils
         :uiop
         :alexandria)
-  (:import-from :cl-mock/src/cl-mock
+  (:import-from :mockingbird/src/functions
                 :undefined-stub-method)
   (:documentation
    "")
 
   (:export :with-methods-tests))
 
-(in-package :cl-mock/t/with-methods)
+(in-package :mockingbird/t/methods)
 
 ;;;;;;;;;;;;;;;;;;
 ;;; Main tests ;;;

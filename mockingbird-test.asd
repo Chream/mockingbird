@@ -1,25 +1,25 @@
 #|
-  This file is a part of cl-mock project.
+  This file is a part of mockingbird project.
   Copyright (c) 2016 Christopher Eames (Chream) (chream@gmx.com)
 |#
 
 (in-package :cl-user)
-(defpackage cl-mock-test-asd
+(defpackage mockingbird-test-asd
   (:use :cl :asdf))
-(in-package :cl-mock-test-asd)
+(in-package :mockingbird-test-asd)
 
-;;;; cl-mock/cl-mock-test.asd
+;;;; mockingbird/mockingbird-test.asd
 
 #-asdf3.1 (error "asdf 3.1 or higher is required.")
-(asdf:defsystem cl-mock-test
+(asdf:defsystem mockingbird-test
   :class :package-inferred-system
-  :description "Test system for cl-mock."
+  :description "Test system for mockingbird."
   :author "Christopher Eames (Chream)"
   :license ""
   :defsystem-depends-on (:prove-asdf)
-  :depends-on (:cl-mock
+  :depends-on (:mockingbird
                :prove
-               "cl-mock/t/all")
+               "mockingbird/t/all")
   :components
   ((:test-file "t/main"))
   :perform (test-op :after (o s)

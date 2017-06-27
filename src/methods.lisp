@@ -1,7 +1,7 @@
-;;;; cl-mock/src/with-methods.lisp
+;;;; mockingbird/src/with-methods.lisp
 
 (in-package :cl-user)
-(uiop:define-package  :cl-mock/src/with-methods
+(uiop:define-package  :mockingbird/src/methods
     (:use :closer-common-lisp)
   (:mix :fare-utils
         :uiop
@@ -9,7 +9,7 @@
   (:import-from :closer-mop
                 :compute-applicable-methods-using-classes
                 :method-specializers)
-  (:import-from :cl-mock/src/cl-mock
+  (:import-from :mockingbird/src/functions
                 :undefined-stub-method
                 :undefined-stub-function-error)
   (:documentation
@@ -31,7 +31,7 @@
            :method-combination-type-name
            :method-combination-options))
 
-(in-package :cl-mock/src/with-methods)
+(in-package :mockingbird/src/methods)
 
 ;;;;;;;;;;;;;;;;;;
 ;;; Interface. ;;;

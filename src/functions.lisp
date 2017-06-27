@@ -1,8 +1,9 @@
-;;;; cl-mock/src/cl-mock.lisp
+;;;; mockingbird/src/mockingbird.lisp
 
 (in-package :cl-user)
-(uiop:define-package :cl-mock/src/cl-mock
-    (:use :closer-common-lisp)
+(uiop:define-package :mockingbird/src/functions
+    (:nicknames :mb.functions)
+  (:use :closer-common-lisp)
   (:mix :fare-utils
         :uiop
         :alexandria)
@@ -24,7 +25,7 @@
            :undefined-function
            :undefined-stub-function-error))
 
-(in-package :cl-mock/src/cl-mock)
+(in-package :mb.functions)
 
 ;;;;;;;;;;;;;;;;;;
 ;;; Interface. ;;;
