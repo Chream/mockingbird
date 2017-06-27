@@ -5,9 +5,6 @@
     (:use :closer-common-lisp
           :prove
           :cl-mock)
-  (:mix :fare-utils
-        :uiop
-        :alexandria)
   (:documentation
    "")
 
@@ -129,7 +126,7 @@
     (with-stubs
         ((foo 99) (bar 99) (baz 99) (sym 'another-symbol))
       (is (foo 5) 99 "(foo) is lexically stubbed.")
-      (is *mock-calls* (acons "FOO" (list '(5)) '())
+      (is *mock-calls* (acons 'foo (list '(5)) '())
           "*mocks-calls* is special.")
       (is (bar 5 10) 99 "(bar) is lexically stubbed.")
       (is (sym 3) 'another-symbol "(sym) is lexically stubbed.")

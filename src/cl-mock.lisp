@@ -65,12 +65,10 @@
          (args (gensym)))
     (mapcar (lambda (name stub-return)
                  `(,name (&rest ,args)
-                        (unless (mock-fn-registered-p ',name)
-                          (register-mock-fn ',name))
-                        (register-mock-call-for ',name ,args)
-                        (etypecase ,stub-return
-                          (function (apply ,stub-return ,args))
-                          (atom  ,stub-return))))
+                         (register-mock-call-for ',name ,args)
+                         (etypecase ,stub-return
+                           (function (apply ,stub-return ,args))
+                           (atom  ,stub-return))))
             fn-names stub-returns)))
 
 (defmacro with-stubs ((&rest fdefs) &body body)
@@ -110,14 +108,12 @@
         (argss (loop :repeat (length fn-names) :collect (gensym))))
     (mapcar (lambda (name stub-return args)
                  `(lambda (&rest ,args)
-                  (unless (mock-fn-registered-p ',name)
-                    (register-mock-fn ',name))
-                  (register-mock-call-for ',name ,args)
-                  (restart-case
-                      (etypecase ,stub-return
-                        (function (apply ,stub-return ,args))
-                        (atom ,stub-return))
-                    (just-return-value () ,stub-return))))
+                    (register-mock-call-for ',name ,args)
+                    (restart-case
+                        (etypecase ,stub-return
+                          (function (apply ,stub-return ,args))
+                          (atom ,stub-return))
+                      (just-return-value () ,stub-return))))
             fn-names stub-returns argss)))
 
 (defun replace-fn-bindings-spec (fdefs temp-fn-vars)
@@ -181,12 +177,8 @@
   (mapcar #'second fdefs))
 
 (defun register-mock-call-for (fn args)
-  (rplacd (mock-calls-spec-for fn)
-           (append (list args)
-                   (mock-calls-for fn))))
-
-(defun register-mock-fn (fn)
-  (setf *mock-calls* (acons (string fn) '() *mock-calls*)))
+  (setf (assoc-value *mock-calls* fn)
+        (cons args (assoc-value *mock-calls* fn))))
 
 (defun mock-fn-registered-p (fn)
   (mock-calls-spec-for fn))
@@ -194,7 +186,7 @@
 (defun mock-calls-spec-for (fn-name)
     "Accessor function for the special *mock-calls* variable.
    Returns the full spec."
-    (assoc (string fn-name) *mock-calls* :test #'string=))
+    (assoc fn-name *mock-calls*))
 
 (defun mock-calls-for (fn-name)
     "Accessor function for the special *mock-calls* variable.
@@ -210,7 +202,6 @@
                       (undefined-stub-function-error name)))
                 fn-names))
       t))
-
 
 ;;;;;;;;;;;;;;;;;;;
 ;;; Conditions. ;;;
