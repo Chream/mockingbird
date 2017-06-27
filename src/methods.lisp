@@ -1,7 +1,7 @@
-;;;; cl-mock/src/with-methods.lisp
+;;;; mockingbird/src/with-methods.lisp
 
 (in-package :cl-user)
-(uiop:define-package  :cl-mock/src/with-methods
+(uiop:define-package  :mockingbird/src/methods
     (:use :closer-common-lisp)
   (:mix :fare-utils
         :uiop
@@ -9,6 +9,9 @@
   (:import-from :closer-mop
                 :compute-applicable-methods-using-classes
                 :method-specializers)
+  (:import-from :mockingbird/src/functions
+                :undefined-stub-method
+                :undefined-stub-function-error)
   (:documentation
    "")
 
@@ -22,10 +25,13 @@
            :remove-methods-for
            :add-methods-for
 
-           :undefined-stub-method
-           :undefined-stub-function-error))
+           ;; Mop extensions
+           :generic-function-method-combination-type-name
+           :generic-function-method-combination-options
+           :method-combination-type-name
+           :method-combination-options))
 
-(in-package :cl-mock/src/with-methods)
+(in-package :mockingbird/src/methods)
 
 ;;;;;;;;;;;;;;;;;;
 ;;; Interface. ;;;
@@ -78,7 +84,7 @@
          (specializers-list (specializers/list-from method-objects)))
     (mapcar
      (lambda (generic-fn specializers)
-       (let ((method-comb (generic-function-method-combination-name
+       (let ((method-comb (generic-function-method-combination-type-name
                            generic-fn))
              (comb-options (generic-function-method-combination-options
                             generic-fn))
@@ -102,8 +108,8 @@
 
 (defgeneric method-combination-type-name (method-combination))
 (defgeneric method-combination-type-options (method-combination))
-(defgeneric gneric-function-method-combination-name (generic-functions))
-(defgeneric gneric-function-method-combination-options (generic-functions))
+(defgeneric generic-function-method-combination-type-name (generic-functions))
+(defgeneric generic-function-method-combination-options (generic-functions))
 
 (defmethod method-combination-type-name ((object method-combination))
   #+sbcl (sb-pcl::method-combination-type-name object)
@@ -113,7 +119,7 @@
   #+sbcl (sb-pcl::method-combination-options object)
   #+ccl (ccl::method-combination-options object))
 
-(defmethod generic-function-method-combination-name
+(defmethod generic-function-method-combination-type-name
     ((object generic-function))
   (method-combination-type-name
    (generic-function-method-combination object)))
@@ -131,6 +137,7 @@
 (defmethod filter-applicable-methods
     ((method-comb-spec (eql 'standard)) comb-options
      all-applicable-methods specializers)
+  (declare (ignore comb-options))
   (let ((applicable-method (first all-applicable-methods)))
     (if (equal (method-specializers applicable-method)
                specializers)
@@ -140,13 +147,13 @@
 (defmethod filter-applicable-methods
     (method-comb comb-options method-objects specializers)
   (method-combination-error
-   "Error in (filter-applicable-methods ~S S).~
-    Can not stub/mock methods for method combination ~S ~
-    for method ~S with specializers ~S."
+   "Error in ~&(filter-applicable-methods ~S S).~& ~
+    Can not stub/mock methods for method combination ~&~S~& ~
+    for method ~&~S~& with specializers ~&~S~& and method combinqtion ~&~S~&."
    method-comb method-objects method-comb (generic-function-name
                                            (method-generic-function
                                             (first method-objects)))
-   specializers))
+   specializers comb-options))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 

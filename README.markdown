@@ -1,6 +1,8 @@
-# Cl-Mock
+# Mockingbird
 
 This package provides some useful stubbing and mocking macros for unit testing. Used when specified functions in a test should not be computed but should instead return a provided constant value.
+
+This library was called cl-mock before but is/was NOT the library called "cl-mock" on quicklisp. I have now changed the name.
 
 ## Usage
 ```
@@ -8,7 +10,7 @@ This package provides some useful stubbing and mocking macros for unit testing. 
 (uiop:define-package :my-project
     (:use :closer-common-lisp
           :prove
-          :cl-mock))
+          :mockingbird))
 (in-package :my-project)
 
 (defun foo (x) x)
@@ -45,21 +47,31 @@ The arguments passed to mocked or stubbed functions are also saved.
 
 These also work for the dynamic and mocking variants.
 
+-------------------------------------------------------------------
+
+It is also possible to mock/stub individual methods.
+
+```
+(with-method-stubs ((foo (x y) 'is-stubbed)
+                    (foo ((x aclass) (y aclass)) 'aclass-stubbed)
+  ...)
+
+```
+
+The calls to methods are currently NOT saved so the above verification functions can not be used.
+
+
 
 ## Installation
 
 Clone this repository and put into asdf load path then
 ```
-(ql:quickload :cl-mock)
+(ql:quickload :mockingbird)
 ```
 
-To run tests first compile and load "cl-mock-test"
+To run tests:
 ```
-(ql:quickload :cl-mock-test)
-```
-Then run
-```
-(asdf:test-system :cl-mock)
+(ql:test-system :mockingbird)
 ```
 
 ## Author
