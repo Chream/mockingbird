@@ -1,9 +1,10 @@
-;;;; cl-mock/t/main.lisp
+;;;; mockingbird/t/main.lisp
 
 (in-package :cl-user)
-(uiop:define-package  :cl-mock/t/main
+(uiop:define-package  :mockingbird/t/main
     (:use :closer-common-lisp
-          :cl-mock/t/all)
+          :prove
+          :mockingbird/t/all)
   (:mix :fare-utils
         :uiop
         :alexandria)
@@ -12,6 +13,9 @@
 
   (:export ))
 
-(in-package :cl-mock/t/main)
+(in-package :mockingbird/t/main)
 
+(plan 36)
 (run-tests)
+(with-methods-tests)
+(finalize)

@@ -1,8 +1,9 @@
-;;;; cl-mock/src/cl-mock.lisp
+;;;; mockingbird/src/mockingbird.lisp
 
 (in-package :cl-user)
-(uiop:define-package :cl-mock/src/cl-mock
-    (:use :closer-common-lisp)
+(uiop:define-package :mockingbird/src/functions
+    (:nicknames :mb.functions)
+  (:use :closer-common-lisp)
   (:mix :fare-utils
         :uiop
         :alexandria)
@@ -19,15 +20,19 @@
            :verify-nth-call-args-for
            :verify-first-call-args-for
            :verify-call-times-for
-           :clear-calls))
+           :clear-calls
 
-(in-package :cl-mock/src/cl-mock)
+           :undefined-function
+           :undefined-stub-function-error))
+
+(in-package :mb.functions)
 
 ;;;;;;;;;;;;;;;;;;
 ;;; Interface. ;;;
 ;;;;;;;;;;;;;;;;;;
 
 (defun call-times-for (fn-name)
+  (declare (special *mock-calls*))
   (length (assoc-value *mock-calls* (string fn-name)
                        :test #'string=)))
 
@@ -61,25 +66,28 @@
          (args (gensym)))
     (mapcar (lambda (name stub-return)
                  `(,name (&rest ,args)
-                        (unless (mock-fn-registered-p ',name)
-                          (register-mock-fn ',name))
-                        (register-mock-call-for ',name ,args)
-                        (etypecase ,stub-return
-                          (function (apply ,stub-return ,args))
-                          (atom  ,stub-return))))
+                         (register-mock-call-for ',name ,args)
+                         (etypecase ,stub-return
+                           (function (apply ,stub-return ,args))
+                           (atom  ,stub-return))))
             fn-names stub-returns)))
 
 (defmacro with-stubs ((&rest fdefs) &body body)
  "The stub macro. Lexically binds a new stub function in place
   and returns a constant supplied value. Calls are counted and
   the arguments are saved in the dynamic variable *mock-calls*."
- `(let* ((*mock-calls* (if (boundp '*mock-calls*)
-                                 *mock-calls*
-                                 '())))
-    (declare (special *mock-calls*))
-    (defined-fns-bound-p ',fdefs)
-    (flet  ,(flet-spec fdefs)
-      ,@body)))
+
+ `(locally
+      ;; TODO Remove the warnings in a better way. Currently all
+      ;;      warnings are removed..
+      (declare #+sbcl(sb-ext:muffle-conditions sb-kernel::simple-warning))
+    (let* ((*mock-calls* (if (boundp '*mock-calls*)
+                             *mock-calls*
+                             '())))
+      (declare (special *mock-calls*))
+      (defined-fns-bound-p ',fdefs)
+      (flet  ,(flet-spec fdefs)
+        ,@body))))
 
 (defmacro with-mocks ((&rest fn-names) &body body)
   "The mock macro. Lexically binds a new mock function which
@@ -101,14 +109,12 @@
         (argss (loop :repeat (length fn-names) :collect (gensym))))
     (mapcar (lambda (name stub-return args)
                  `(lambda (&rest ,args)
-                  (unless (mock-fn-registered-p ',name)
-                    (register-mock-fn ',name))
-                  (register-mock-call-for ',name ,args)
-                  (restart-case
-                      (etypecase ,stub-return
-                        (function (apply ,stub-return ,args))
-                        (atom ,stub-return))
-                    (just-return-value () ,stub-return))))
+                    (register-mock-call-for ',name ,args)
+                    (restart-case
+                        (etypecase ,stub-return
+                          (function (apply ,stub-return ,args))
+                          (atom ,stub-return))
+                      (just-return-value () ,stub-return))))
             fn-names stub-returns argss)))
 
 (defun replace-fn-bindings-spec (fdefs temp-fn-vars)
@@ -141,14 +147,18 @@
   (let* ((fn-names (fn-names-from fdefs))
          (temp-fn-vars (loop :for fn in fn-names
                           :collect (gensym (format nil "~S-orig" fn)))))
-    `(let ((*mock-calls* (if (boundp '*mock-calls*)
-                            *mock-calls*
-                            '())))
-       (declare (special *mock-calls* ,@temp-fn-vars))
-       (defined-fns-bound-p ',fdefs)
-       ,(replace-fn-bindings-spec fdefs temp-fn-vars)
-       (unwind-protect (progn ,@body)
-         ,(rebind-original-fn-bindings-spec fdefs temp-fn-vars)))))
+    `(locally
+         ;; TODO Remove the warnings in a better way. Currently all
+         ;;      warnings are removed..
+         (declare #+sbcl(sb-ext:muffle-conditions sb-kernel::simple-warning))
+       (let ((*mock-calls* (if (boundp '*mock-calls*)
+                               *mock-calls*
+                               '())))
+         (declare (special *mock-calls* ,@temp-fn-vars))
+         (defined-fns-bound-p ',fdefs)
+         ,(replace-fn-bindings-spec fdefs temp-fn-vars)
+         (unwind-protect (progn ,@body)
+           ,(rebind-original-fn-bindings-spec fdefs temp-fn-vars))))))
 
 (defmacro with-dynamic-mocks ((&rest fn-names) &body body)
   `(with-dynamic-stubs ,(mapcar #'list
@@ -168,12 +178,8 @@
   (mapcar #'second fdefs))
 
 (defun register-mock-call-for (fn args)
-  (rplacd (mock-calls-spec-for fn)
-           (append (list args)
-                   (mock-calls-for fn))))
-
-(defun register-mock-fn (fn)
-  (setf *mock-calls* (acons (string fn) '() *mock-calls*)))
+  (setf (assoc-value *mock-calls* fn)
+        (cons args (assoc-value *mock-calls* fn))))
 
 (defun mock-fn-registered-p (fn)
   (mock-calls-spec-for fn))
@@ -181,7 +187,7 @@
 (defun mock-calls-spec-for (fn-name)
     "Accessor function for the special *mock-calls* variable.
    Returns the full spec."
-    (assoc (string fn-name) *mock-calls* :test #'string=))
+    (assoc fn-name *mock-calls*))
 
 (defun mock-calls-for (fn-name)
     "Accessor function for the special *mock-calls* variable.
@@ -197,7 +203,6 @@
                       (undefined-stub-function-error name)))
                 fn-names))
       t))
-
 
 ;;;;;;;;;;;;;;;;;;;
 ;;; Conditions. ;;;

@@ -1,9 +1,10 @@
-;;;; cl-mock/src/all.lisp
+;;;; mockingbird/src/all.lisp
 
 (in-package :cl-user)
-(uiop:define-package  :cl-mock/src/all
-    (:nicknames :cl-mock)
+(uiop:define-package  :mockingbird/src/all
+    (:nicknames :mockingbird :mb)
   (:use :closer-common-lisp)
-  (:use-reexport :cl-mock/src/cl-mock)
+  (:use-reexport :mockingbird/src/functions
+                 :mockingbird/src/methods)
   (:documentation
    ""))

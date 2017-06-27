@@ -1,21 +1,18 @@
-;;;; cl-mock/t/cl-mock.lisp
+;;;; mockingbird/t/mockingbird.lisp
 
 (in-package :cl-user)
-(uiop:define-package  :cl-mock/t/cl-mock
+(uiop:define-package :mockingbird/t/functions
     (:use :closer-common-lisp
           :prove
-          :cl-mock)
-  (:mix :fare-utils
-        :uiop
-        :alexandria)
+          :mockingbird)
   (:documentation
    "")
 
   (:export :run-tests))
 
-(in-package :cl-mock/t/cl-mock)
+(in-package :mockingbird/t/functions)
 
-;; NOTE: To run this test file, execute `(asdf:test-system :cl-mock)' in your Lisp.
+;; NOTE: To run this test file, execute `(asdf:test-system :mockingbird)' in your Lisp.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Parameters/Constants/Functions ;;;
@@ -25,17 +22,13 @@
 ;; (setf *default-reporter* :list)
 ;; (setf prove:*debug-on-error* t)
 
-#+sbcl (declaim (sb-ext:muffle-conditions))
-
 (defun run-tests ()
-  (plan 29)
   (init-test)
   (*mock-calls*-init-test)
   (with-stubs-test)
   (with-mocks-test)
   (with-dynamic-stubs-test)
-  (with-dynamic-mocks-test)
-  (finalize))
+  (with-dynamic-mocks-test))
 
 (defun foo (x) x)
 (defun bar (x y) (+ x y))
@@ -133,7 +126,7 @@
     (with-stubs
         ((foo 99) (bar 99) (baz 99) (sym 'another-symbol))
       (is (foo 5) 99 "(foo) is lexically stubbed.")
-      (is *mock-calls* (acons "FOO" (list '(5)) '())
+      (is *mock-calls* (acons 'foo (list '(5)) '())
           "*mocks-calls* is special.")
       (is (bar 5 10) 99 "(bar) is lexically stubbed.")
       (is (sym 3) 'another-symbol "(sym) is lexically stubbed.")
