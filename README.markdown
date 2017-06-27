@@ -45,6 +45,20 @@ The arguments passed to mocked or stubbed functions are also saved.
 
 These also work for the dynamic and mocking variants.
 
+-------------------------------------------------------------------
+
+It is also possible to mock/stub individual methods.
+
+```
+(with-method-stubs ((foo (x y) 'is-stubbed)
+                    (foo ((x aclass) (y aclass)) 'aclass-stubbed)
+  ...)
+
+```
+
+The calls to methods are currently NOT saved so the above verification functions can not be used.
+
+
 
 ## Installation
 
@@ -53,13 +67,9 @@ Clone this repository and put into asdf load path then
 (ql:quickload :cl-mock)
 ```
 
-To run tests first compile and load "cl-mock-test"
+To run tests:
 ```
-(ql:quickload :cl-mock-test)
-```
-Then run
-```
-(asdf:test-system :cl-mock)
+(ql:test-system :cl-mock)
 ```
 
 ## Author

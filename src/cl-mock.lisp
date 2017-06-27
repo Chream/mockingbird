@@ -79,6 +79,8 @@
   the arguments are saved in the dynamic variable *mock-calls*."
 
  `(locally
+      ;; TODO Remove the warnings in a better way. Currently all
+      ;;      warnings are removed..
       (declare #+sbcl(sb-ext:muffle-conditions sb-kernel::simple-warning))
     (let* ((*mock-calls* (if (boundp '*mock-calls*)
                              *mock-calls*
@@ -149,6 +151,8 @@
          (temp-fn-vars (loop :for fn in fn-names
                           :collect (gensym (format nil "~S-orig" fn)))))
     `(locally
+         ;; TODO Remove the warnings in a better way. Currently all
+         ;;      warnings are removed..
          (declare #+sbcl(sb-ext:muffle-conditions sb-kernel::simple-warning))
        (let ((*mock-calls* (if (boundp '*mock-calls*)
                                *mock-calls*
