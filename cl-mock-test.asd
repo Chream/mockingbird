@@ -22,29 +22,10 @@
                "cl-mock/t/all")
   :components
   ((:test-file "t/main"))
-  :perform (test-op (o s)
+  :perform (test-op :after (o s)
                     (uiop:symbol-call :prove '#:run s)
                     (asdf:clear-system s)))
-
-
-
 
 (register-system-packages
  "closer-mop"
  '(:c2mop :closer-common-lisp :c2cl :closer-common-lisp-user :c2cl-user))
-
-
-;; (defsystem cl-mock-test
-;;   :author "Christopher Eames (Chream)"
-;;   :license ""
-;;   :depends-on (:cl-mock
-;;                :prove)
-;;   :components ((:module "t"
-;;                         :components
-;;                         ((:test-file "cl-mock"))))
-;;   :description "Test system for cl-mock"
-
-;;   :defsystem-depends-on (:prove-asdf)
-;;   :perform (test-op :after (op c)
-;;                     (funcall (intern #.(string :run-test-system) :prove-asdf) c)
-;;                     (asdf:clear-system c)))

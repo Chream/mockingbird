@@ -15,7 +15,7 @@
 
 (in-package :cl-mock/t/main)
 
-(plan 35)
+(plan 36)
 (run-tests)
 (with-methods-tests)
 (finalize)
