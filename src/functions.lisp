@@ -80,7 +80,7 @@
  `(locally
       ;; TODO Remove the warnings in a better way. Currently all
       ;;      warnings are removed..
-      (declare #+sbcl(sb-ext:muffle-conditions sb-kernel::simple-warning))
+      (declare #+sbcl(sb-ext:muffle-conditions simple-warning))
     (let* ((*mock-calls* (if (boundp '*mock-calls*)
                              *mock-calls*
                              '())))
@@ -150,7 +150,7 @@
     `(locally
          ;; TODO Remove the warnings in a better way. Currently all
          ;;      warnings are removed..
-         (declare #+sbcl(sb-ext:muffle-conditions sb-kernel::simple-warning))
+         (declare #+sbcl(sb-ext:muffle-conditions simple-warning))
        (let ((*mock-calls* (if (boundp '*mock-calls*)
                                *mock-calls*
                                '())))
